@@ -1,87 +1,142 @@
-const sidebarEl = document.getElementById('sidebar');
-const sidebarOverlayEl = document.getElementById('sidebarOverlay');
-const statusContainer = document.getElementById('statusContainer');
-const welcomeState = document.getElementById('welcomeState');
-const loadingState = document.getElementById('loadingState');
-const loader = document.getElementById('loader');
-const wpFrame = document.getElementById('wpFrame');
 
-// System Check
 document.addEventListener('DOMContentLoaded', () => {
-    // Check Memory (Chrome/Edge only)
-    if (navigator.deviceMemory) {
-        const ram = navigator.deviceMemory;
-        // console.log(`Device Memory: ~${ram}GB`);
-        if (ram < 4) {
-            const warningEl = document.getElementById('systemWarning');
-            const ramSizeEl = document.getElementById('ramSize');
-            if (warningEl && ramSizeEl) {
-                ramSizeEl.innerText = ram;
-                warningEl.classList.remove('hidden');
-            }
-        }
-    }
+    initApp();
 });
 
-function toggleSidebar() {
-    sidebarEl.classList.toggle('-translate-x-full');
-    sidebarOverlayEl.classList.toggle('hidden');
+let isRunning = false;
+
+function initApp() {
+    // 1. Initial Checks
+    checkSystemMemory();
+
+    // 2. Bind Event Listeners
+    bindSidebarEvents();
+    bindPresetEvents();
+    bindTabEvents();
+    bindLauncherEvents();
+    bindBlueprintEvents();
+
+    // 3. Initialize UI State if needed
+    updatePluginCounts();
 }
 
-function openMobileSidebar() {
-    sidebarEl.classList.remove('-translate-x-full');
-    sidebarOverlayEl.classList.remove('hidden');
+/**
+ * System Memory Check
+ */
+function checkSystemMemory() {
+    if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+        const warningEl = document.getElementById('systemWarning');
+        const ramSizeEl = document.getElementById('ramSize');
+        if (warningEl && ramSizeEl) {
+            ramSizeEl.innerText = navigator.deviceMemory;
+            warningEl.classList.remove('hidden');
+        }
+    }
 }
 
-function toggleSidebarDesktop() {
+/**
+ * Sidebar Interaction (Mobile & Desktop)
+ */
+function bindSidebarEvents() {
+    const sidebarEl = document.getElementById('sidebar');
+    const sidebarOverlayEl = document.getElementById('sidebarOverlay');
     const expandBtn = document.getElementById('expandBtn');
 
-    // Toggle margins/transform for desktop
-    // We use negative margin to pull it off-screen
-    sidebarEl.classList.toggle('md:-ml-80');
+    // Mobile Toggle
+    const btnMobileToggle = document.getElementById('btnMobileToggle');
+    const btnOpenMobileSidebar = document.getElementById('btnOpenMobileSidebar');
 
-    // Toggle expand button visibility
-    if (sidebarEl.classList.contains('md:-ml-80')) {
-        expandBtn.classList.remove('hidden');
-    } else {
-        expandBtn.classList.add('hidden');
-    }
+    const toggleMobile = () => {
+        sidebarEl.classList.toggle('-translate-x-full');
+        sidebarOverlayEl.classList.toggle('hidden');
+    };
+
+    if (btnMobileToggle) btnMobileToggle.addEventListener('click', toggleMobile);
+    if (btnOpenMobileSidebar) btnOpenMobileSidebar.addEventListener('click', () => {
+        sidebarEl.classList.remove('-translate-x-full');
+        sidebarOverlayEl.classList.remove('hidden');
+    });
+    if (sidebarOverlayEl) sidebarOverlayEl.addEventListener('click', toggleMobile);
+
+    // Desktop Collapse
+    const btnCollapseDesktop = document.getElementById('btnCollapseDesktop');
+
+    const toggleDesktop = () => {
+        // Toggle negative margin to pull off-screen
+        sidebarEl.classList.toggle('md:-ml-80');
+
+        // Toggle expand button visibility
+        if (sidebarEl.classList.contains('md:-ml-80')) {
+            expandBtn.classList.remove('hidden');
+        } else {
+            expandBtn.classList.add('hidden');
+        }
+    };
+
+    if (btnCollapseDesktop) btnCollapseDesktop.addEventListener('click', toggleDesktop);
+    if (expandBtn) expandBtn.addEventListener('click', toggleDesktop);
+}
+
+/**
+ * Tab Switching Logic
+ */
+function bindTabEvents() {
+    const tabs = document.querySelectorAll('[data-action="switch-tab"]');
+
+    tabs.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tabName = btn.dataset.tab;
+            switchTab(tabName);
+        });
+    });
+
+    // Also bind change events for UpdatePluginCounts
+    document.querySelectorAll('.plugin-check, .theme-check').forEach(cb => {
+        cb.addEventListener('change', updatePluginCounts);
+    });
 }
 
 function switchTab(tabName) {
     // Hide all contents
     document.querySelectorAll('.plugin-tab').forEach(el => el.classList.add('hidden'));
-    // Deselect all buttons
+
+    // Reset all buttons style
     document.querySelectorAll('.tab-btn').forEach(el => {
         el.classList.remove('text-blue-600', 'border-blue-600');
         el.classList.add('text-gray-500', 'border-transparent');
     });
 
     // Show selected content
-    document.getElementById('tab-' + tabName).classList.remove('hidden');
-    // Select button
-    const btn = document.getElementById('tab-btn-' + tabName);
-    btn.classList.remove('text-gray-500', 'border-transparent');
-    btn.classList.add('text-blue-600', 'border-blue-600');
+    const targetContent = document.getElementById('tab-' + tabName);
+    if (targetContent) targetContent.classList.remove('hidden');
+
+    // Highlight button
+    const targetBtn = document.getElementById('tab-btn-' + tabName);
+    if (targetBtn) {
+        targetBtn.classList.remove('text-gray-500', 'border-transparent');
+        targetBtn.classList.add('text-blue-600', 'border-blue-600');
+    }
 }
 
-// Modern Base64 encoding
-function encodeBase64(str) {
-    const bytes = new TextEncoder().encode(str);
-    const binString = Array.from(bytes, (byte) =>
-        String.fromCodePoint(byte),
-    ).join("");
-    return btoa(binString);
+/**
+ * Preset Logic
+ */
+function bindPresetEvents() {
+    const presetBtns = document.querySelectorAll('[data-action="apply-preset"]');
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            applyPreset(btn.dataset.preset);
+        });
+    });
 }
 
-let isRunning = false;
-
-// Presets Logic
 function applyPreset(type) {
     // Uncheck all first
     document.querySelectorAll('.plugin-check').forEach(cb => cb.checked = false);
     // Uncheck themes (reset to default)
-    document.querySelector('input[name="theme-radio"][value=""]').checked = true;
+    const defaultTheme = document.querySelector('input[name="theme-radio"][value=""]');
+    if (defaultTheme) defaultTheme.checked = true;
 
     // Apply Logic
     if (type === 'commerce') {
@@ -90,7 +145,6 @@ function applyPreset(type) {
             const el = document.querySelector(`.plugin-check[value="${v}"]`);
             if (el) el.checked = true;
         });
-        // Switch to store tab to show effect
         switchTab('store');
     } else if (type === 'blog') {
         const targets = ['wordpress-seo', 'classic-editor'];
@@ -98,13 +152,14 @@ function applyPreset(type) {
             const el = document.querySelector(`.plugin-check[value="${v}"]`);
             if (el) el.checked = true;
         });
-        // Switch to featured tab
         switchTab('featured');
     }
     updatePluginCounts();
 }
 
-// Counter Logic
+/**
+ * Counter Logic
+ */
 function updatePluginCounts() {
     ['featured', 'store', 'tools'].forEach(tab => {
         const container = document.getElementById('tab-' + tab);
@@ -121,161 +176,48 @@ function updatePluginCounts() {
         }
     });
 
-    // Theme Counter (Special case, only if not default)
-    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked').value;
+    // Theme Counter
+    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked')?.value;
     const themeBadge = document.getElementById('count-themes');
-    if (selectedTheme) {
-        themeBadge.innerText = "1";
-        themeBadge.classList.remove('hidden');
-    } else {
-        themeBadge.classList.add('hidden');
+    if (themeBadge) {
+        if (selectedTheme) {
+            themeBadge.innerText = "1";
+            themeBadge.classList.remove('hidden');
+        } else {
+            themeBadge.classList.add('hidden');
+        }
     }
 }
 
-// System Check & Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    // Check Memory
-    if (navigator.deviceMemory && navigator.deviceMemory < 4) {
-        const warningEl = document.getElementById('systemWarning');
-        const ramSizeEl = document.getElementById('ramSize');
-        if (warningEl && ramSizeEl) {
-            ramSizeEl.innerText = navigator.deviceMemory;
-            warningEl.classList.remove('hidden');
-        }
+/**
+ * Launcher & Error Handling
+ */
+function bindLauncherEvents() {
+    const launchBtn = document.getElementById('launchBtn');
+    if (launchBtn) {
+        launchBtn.addEventListener('click', launchPlayground);
     }
 
-    // Plugin Checkbox Listeners
-    document.querySelectorAll('.plugin-check').forEach(cb => {
-        cb.addEventListener('change', updatePluginCounts);
-    });
-
-    // Theme Radio Listeners
-    document.querySelectorAll('.theme-check').forEach(cb => {
-        cb.addEventListener('change', updatePluginCounts);
-    });
-});
-
-// Blueprint Logic
-function generateBlueprint() {
-    const phpVersion = document.getElementById('phpVersion').value;
-    const wpVersion = document.getElementById('wpVersion').value;
-    const selectedPlugins = Array.from(document.querySelectorAll('.plugin-check:checked')).map(cb => cb.value);
-    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked').value;
-
-    const steps = [
-        {
-            "step": "login",
-            "username": "admin",
-            "password": "password"
-        }
-    ];
-
-    // Plugins
-    selectedPlugins.forEach(plugin => {
-        steps.push({
-            "step": "installPlugin",
-            "pluginData": {
-                "resource": "wordpress.org/plugins",
-                "slug": plugin
-            }
-        });
-    });
-
-    // Theme
-    if (selectedTheme) {
-        steps.push({
-            "step": "installTheme",
-            "themeData": {
-                "resource": "wordpress.org/themes",
-                "slug": selectedTheme
-            }
+    const btnRetry = document.getElementById('btnRetry');
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            // Reset UI states to ready-to-launch and try again
+            document.getElementById('errorState').classList.add('hidden');
+            launchPlayground();
         });
     }
 
-    // PHP Setup
-    const setupCode = `<?php
-        require_once 'wp-load.php';
-        update_option( 'timezone_string', 'Asia/Taipei' );
-        update_option( 'gmt_offset', 8 );
-    ?>`;
-
-    steps.push({
-        "step": "setSiteLanguage",
-        "language": "zh_TW"
-    });
-
-    steps.push({
-        "step": "runPHP",
-        "code": setupCode
-    });
-
-    return {
-        "landingPage": "/wp-admin/",
-        "preferredVersions": {
-            "php": phpVersion,
-            "wp": wpVersion
-        },
-        "features": {
-            "networking": true
-        },
-        "steps": steps
-    };
+    const btnForceReload = document.getElementById('btnForceReload');
+    if (btnForceReload) {
+        btnForceReload.addEventListener('click', () => {
+            location.reload();
+        });
+    }
 }
-
-function showBlueprint() {
-    const blueprint = generateBlueprint();
-    document.getElementById('blueprintCode').innerText = JSON.stringify(blueprint, null, 2);
-    document.getElementById('blueprintModal').classList.remove('hidden');
-}
-
-// Export Logic
-function getPlaygroundUrl(blueprint) {
-    const blueprintJson = JSON.stringify(blueprint);
-    const hash = encodeBase64(blueprintJson);
-    return 'https://playground.wordpress.net/?v=' + Date.now() + '#' + hash;
-}
-
-function downloadBlueprint() {
-    const blueprint = generateBlueprint();
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(blueprint, null, 2));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "playground-blueprint.json");
-    document.body.appendChild(downloadAnchorNode); // required for firefox
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-}
-
-function copyUrl() {
-    const blueprint = generateBlueprint();
-    const url = getPlaygroundUrl(blueprint);
-    // Remove the cache busting query param for sharing to make it cleaner (optional, but better for sharing)
-    const cleanUrl = url.replace(/\?v=\d+/, '');
-
-    navigator.clipboard.writeText(cleanUrl).then(() => {
-        alert('🌐 啟動連結已複製到剪貼簿！\n\n您可以將此連結傳給朋友，他們就能打開一模一樣的環境。');
-    });
-}
-
-function shareLine() {
-    const blueprint = generateBlueprint();
-    const url = getPlaygroundUrl(blueprint).replace(/\?v=\d+/, '');
-
-    // Line has a URL length limit, but we'll try our best.
-    // Ideally we should use a URL shortener service, but that requires backend.
-
-    const text = `我剛剛用 WP Playground TW 建立了一個 WordPress 測試站！\n\n包含外掛：${blueprint.steps.filter(s => s.step === 'installPlugin').map(s => s.pluginData.slug).join(', ') || '無'}\n\n點我啟動：${url}`;
-
-    const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
-    window.open(lineUrl, '_blank');
-}
-
-// Previously copyBlueprint - keeping it specific if needed, or rely on copyUrl/download
-// Leaving generateBlueprint helper and launch logic below
 
 function launchPlayground() {
     const selectedPlugins = Array.from(document.querySelectorAll('.plugin-check:checked'));
-    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked').value;
+    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked')?.value;
 
     // Safety check for restart
     if (isRunning) {
@@ -290,38 +232,45 @@ function launchPlayground() {
         } else {
             msg += "本次啟動將【不包含】任何額外外掛或主題。\n\n";
         }
-
         msg += "確定要重新啟動嗎？";
 
-        const confirmRestart = confirm(msg);
-        if (!confirmRestart) return;
+        if (!confirm(msg)) return;
     }
 
-    // UI Updates - Lock Button
+    // UI Elements
     const launchBtn = document.getElementById('launchBtn');
     const launchText = document.getElementById('launchText');
     const btnIcon = document.getElementById('btnIcon');
     const btnSpinner = document.getElementById('btnSpinner');
 
+    const welcomeState = document.getElementById('welcomeState');
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const statusContainer = document.getElementById('statusContainer');
+    const loader = document.getElementById('loader');
+    const wpFrame = document.getElementById('wpFrame');
+
+    // Reset Error State
+    if (errorState) errorState.classList.add('hidden');
+
+    // Lock Button
     launchBtn.disabled = true;
     btnIcon.classList.add('hidden');
     btnSpinner.classList.remove('hidden');
+    launchText.innerText = isRunning ? "重啟中..." : "啟動中...";
 
-    if (isRunning) {
-        launchText.innerText = "重啟中...";
-    } else {
-        launchText.innerText = "啟動中...";
-    }
-
-    // Sidebar Mobile check
+    // Mobile Sidebar check
     if (window.innerWidth < 768) {
-        toggleSidebar();
+        const sidebarEl = document.getElementById('sidebar');
+        const sidebarOverlayEl = document.getElementById('sidebarOverlay');
+        sidebarEl.classList.add('-translate-x-full');
+        sidebarOverlayEl.classList.add('hidden');
     }
 
     // Show Overlay
     welcomeState.classList.add('hidden');
     loadingState.classList.remove('hidden');
-    loader.classList.remove('hidden');
+    if (loader) loader.classList.remove('hidden');
     wpFrame.classList.add('hidden');
     statusContainer.classList.remove('hidden');
 
@@ -331,37 +280,48 @@ function launchPlayground() {
     const hash = encodeBase64(blueprintJson);
     const url = 'https://playground.wordpress.net/?v=' + Date.now() + '#' + hash;
 
-    // Force iframe reset to ensure clean state
+    // Force iframe reset
     wpFrame.src = 'about:blank';
 
-    // Load new environment after a brief delay
     setTimeout(() => {
         wpFrame.src = url;
     }, 100);
 
-    // Handle Load
+    // Timeout Logic
+    const timeoutId = setTimeout(() => {
+        if (!statusContainer.classList.contains('hidden') && loadingState.classList.contains('hidden') === false) {
+            // Still loading after 20s
+            loadingState.classList.add('hidden');
+            if (loader) loader.classList.add('hidden');
+            if (errorState) errorState.classList.remove('hidden');
+
+            // Reset Button State
+            launchBtn.disabled = false;
+            btnIcon.classList.remove('hidden');
+            btnSpinner.classList.add('hidden');
+            launchText.innerText = "啟動環境";
+        }
+    }, 20000);
+
     wpFrame.onload = function () {
-        // Check if we can access the location (meaning we are still on same origin/about:blank)
-        // If we CANT access it (CORS error), it means we successfully navigated to playground.wordpress.net
+        // Simple cross-origin check
         let isLocal = false;
         try {
             isLocal = wpFrame.contentWindow.location.href === 'about:blank';
         } catch (e) {
-            // SecurityError means Cross-Origin => Success! We are on the remote site.
-            isLocal = false;
+            isLocal = false; // CORS Error = Success
         }
 
-        if (isLocal) {
-            return; // Ignore about:blank load
-        }
+        if (isLocal) return;
 
-        // Give it a substantial delay to cover the white screen / bootloader phase
-        // 3 seconds is usually enough for the basic bootloader to appear
+        // Clear timeout if successful load
+        clearTimeout(timeoutId);
+
         setTimeout(() => {
             statusContainer.classList.add('hidden');
             wpFrame.classList.remove('hidden');
 
-            // Re-enable button and Set Running State
+            // Set Running State
             isRunning = true;
             launchBtn.disabled = false;
             btnIcon.classList.remove('hidden');
@@ -371,19 +331,148 @@ function launchPlayground() {
             launchBtn.classList.remove('bg-blue-700', 'hover:bg-blue-800', 'focus:ring-blue-300');
             launchBtn.classList.add('bg-orange-600', 'hover:bg-orange-700', 'focus:ring-orange-300');
             launchText.innerText = "重新啟動環境";
-
         }, 3000);
     };
+}
 
-    // Safety Fallback: Removing loading mask after 20 seconds if nothing happens
-    // (In case of network timeout where onload doesn't trigger properly)
+/**
+ * Blueprint & Sharing
+ */
+function bindBlueprintEvents() {
+    // Show Modal
+    const btnShow = document.getElementById('btnShowBlueprint');
+    const modal = document.getElementById('blueprintModal');
+    const codeBlock = document.getElementById('blueprintCode');
+
+    if (btnShow && modal) {
+        btnShow.addEventListener('click', () => {
+            const blueprint = generateBlueprint();
+            codeBlock.innerText = JSON.stringify(blueprint, null, 2);
+            modal.classList.remove('hidden');
+        });
+    }
+
+    // Close Modal (Multiple buttons)
+    document.querySelectorAll('.modal-close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (modal) modal.classList.add('hidden');
+        });
+    });
+
+    // Share Actions
+    const btnShareLine = document.getElementById('btnShareLine');
+    if (btnShareLine) {
+        btnShareLine.addEventListener('click', () => {
+            const blueprint = generateBlueprint();
+            const url = getPlaygroundUrl(blueprint).replace(/\?v=\d+/, '');
+            const text = `我剛剛用 WP Playground TW 建立了一個 WordPress 測試站！\n\n包含外掛：${blueprint.steps.filter(s => s.step === 'installPlugin').map(s => s.pluginData.slug).join(', ') || '無'}\n\n點我啟動：${url}`;
+            const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+            window.open(lineUrl, '_blank');
+        });
+    }
+
+    const btnCopyUrl = document.getElementById('btnCopyUrl');
+    if (btnCopyUrl) {
+        btnCopyUrl.addEventListener('click', () => {
+            const blueprint = generateBlueprint();
+            const url = getPlaygroundUrl(blueprint).replace(/\?v=\d+/, '');
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('🌐 連結已複製！');
+            });
+        });
+    }
+
+    const btnDownload = document.getElementById('btnDownloadBlueprint');
+    if (btnDownload) {
+        btnDownload.addEventListener('click', () => {
+            const blueprint = generateBlueprint();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(blueprint, null, 2));
+            const dlNode = document.createElement('a');
+            dlNode.setAttribute("href", dataStr);
+            dlNode.setAttribute("download", "playground-blueprint.json");
+            document.body.appendChild(dlNode);
+            dlNode.click();
+            dlNode.remove();
+        });
+    }
+}
+
+function showToast(message) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    // Create Toast Element
+    const toast = document.createElement('div');
+    toast.className = 'bg-gray-800 text-white px-4 py-2 rounded shadow-lg text-sm transition-opacity duration-300 opacity-0 transform translate-y-2';
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    // Animate In
+    requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+    });
+
+    // Remove after delay
     setTimeout(() => {
-        if (!statusContainer.classList.contains('hidden')) {
-            statusContainer.classList.add('hidden');
-            wpFrame.classList.remove('hidden');
-            launchBtn.disabled = false;
-            btnIcon.classList.remove('hidden');
-            btnSpinner.classList.add('hidden');
-        }
-    }, 20000);
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+
+/**
+ * Blueprint Generator Helpers
+ */
+function generateBlueprint() {
+    const phpVersion = document.getElementById('phpVersion').value;
+    const wpVersion = document.getElementById('wpVersion').value;
+    const selectedPlugins = Array.from(document.querySelectorAll('.plugin-check:checked')).map(cb => cb.value);
+    const selectedTheme = document.querySelector('input[name="theme-radio"]:checked')?.value;
+
+    const steps = [
+        { "step": "login", "username": "admin", "password": "password" }
+    ];
+
+    selectedPlugins.forEach(plugin => {
+        steps.push({
+            "step": "installPlugin",
+            "pluginData": { "resource": "wordpress.org/plugins", "slug": plugin }
+        });
+    });
+
+    if (selectedTheme) {
+        steps.push({
+            "step": "installTheme",
+            "themeData": { "resource": "wordpress.org/themes", "slug": selectedTheme }
+        });
+    }
+
+    const setupCode = `<?php
+        require_once 'wp-load.php';
+        update_option( 'timezone_string', 'Asia/Taipei' );
+        update_option( 'gmt_offset', 8 );
+    ?>`;
+
+    steps.push({ "step": "setSiteLanguage", "language": "zh_TW" });
+    steps.push({ "step": "runPHP", "code": setupCode });
+
+    return {
+        "landingPage": "/wp-admin/",
+        "preferredVersions": { "php": phpVersion, "wp": wpVersion },
+        "features": { "networking": true },
+        "steps": steps
+    };
+}
+
+function encodeBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
+    return btoa(binString);
+}
+
+function getPlaygroundUrl(blueprint) {
+    const hash = encodeBase64(JSON.stringify(blueprint));
+    return 'https://playground.wordpress.net/?v=' + Date.now() + '#' + hash;
 }
