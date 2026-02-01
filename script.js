@@ -1,5 +1,5 @@
-const sidebar = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebarEl = document.getElementById('sidebar');
+const sidebarOverlayEl = document.getElementById('sidebarOverlay');
 const statusContainer = document.getElementById('statusContainer');
 const welcomeState = document.getElementById('welcomeState');
 const loadingState = document.getElementById('loadingState');
@@ -24,8 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function toggleSidebar() {
-    sidebar.classList.toggle('-translate-x-full');
-    sidebarOverlay.classList.toggle('hidden');
+    sidebarEl.classList.toggle('-translate-x-full');
+    sidebarOverlayEl.classList.toggle('hidden');
+}
+
+function openMobileSidebar() {
+    sidebarEl.classList.remove('-translate-x-full');
+    sidebarOverlayEl.classList.remove('hidden');
 }
 
 function toggleSidebarDesktop() {
@@ -33,10 +38,10 @@ function toggleSidebarDesktop() {
 
     // Toggle margins/transform for desktop
     // We use negative margin to pull it off-screen
-    sidebar.classList.toggle('md:-ml-80');
+    sidebarEl.classList.toggle('md:-ml-80');
 
     // Toggle expand button visibility
-    if (sidebar.classList.contains('md:-ml-80')) {
+    if (sidebarEl.classList.contains('md:-ml-80')) {
         expandBtn.classList.remove('hidden');
     } else {
         expandBtn.classList.add('hidden');

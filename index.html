@@ -4,7 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>WP Playground TW - 快速啟動器</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +17,7 @@
 
     <!-- Sidebar Configuration -->
     <aside
-        class="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-20 overflow-hidden shrink-0 transition-all duration-300 transform -translate-x-full md:translate-x-0 absolute md:relative"
+        class="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-50 overflow-hidden shrink-0 transition-all duration-300 transform -translate-x-full md:translate-x-0 absolute md:relative"
         id="sidebar">
         <!-- Header -->
         <div class="p-4 border-b border-gray-100 shrink-0 flex justify-between items-start">
@@ -258,14 +262,14 @@
                 <span class="font-mono">{}</span> 檢視藍圖 JSON
             </button>
             <div class="mt-2 text-center text-xs text-gray-500">
-                <span>WP Playground TW v1.0.0</span><br>
+                <span>WP Playground TW v1.0.3</span><br>
                 初次載入可能需要 15-30 秒
             </div>
         </div>
     </aside>
 
     <!-- Overlay for mobile sidebar -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-0 hidden md:hidden"
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"
         onclick="toggleSidebar()"></div>
 
     <!-- Main Content / Preview -->
@@ -308,9 +312,7 @@
                     </div>
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">準備就緒</h2>
                     <p class="text-gray-600 mb-6">請在左側選擇您的 WordPress 環境配置，然後點擊「啟動環境」。</p>
-                    <button
-                        onclick="sidebar.classList.remove('-translate-x-full'); sidebarOverlay.classList.remove('hidden');"
-                        class="md:hidden text-blue-600 font-medium hover:underline">
+                    <button onclick="openMobileSidebar()" class="md:hidden text-blue-600 font-medium hover:underline">
                         開啟設定選單 &rarr;
                     </button>
                 </div>
