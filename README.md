@@ -1,4 +1,4 @@
-# WP Playground TW 🇹🇼
+# WP Playground TW
 
 這是一個基於 [WordPress Playground](https://playground.wordpress.net/) 的繁體中文快速啟動器。讓您無需安裝任何伺服器軟體（如 AMP, Docker），直接在瀏覽器中執行真實的 WordPress 網站。
 
