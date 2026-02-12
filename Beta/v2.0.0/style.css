@@ -1,0 +1,271 @@
+/**
+ * WP Playground TW - Enhanced Stylesheet
+ * Authors: Original Author, Claude (Anthropic), Antigravity
+ * Version: 2.0.0
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ==================== Base Styles ==================== */
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==================== Utility Classes ==================== */
+
+/* Tab Button States */
+.tab-btn {
+    position: relative;
+}
+
+.tab-btn-active {
+    color: rgb(37, 99, 235); /* text-blue-600 */
+    border-color: rgb(37, 99, 235); /* border-blue-600 */
+}
+
+.tab-btn-inactive {
+    color: rgb(107, 114, 128); /* text-gray-500 */
+    border-color: transparent;
+}
+
+.tab-btn-inactive:hover {
+    color: rgb(55, 65, 81); /* text-gray-700 */
+}
+
+/* Plugin/Theme Labels */
+.plugin-label {
+    transition: all 0.15s ease;
+}
+
+.plugin-label:hover {
+    background-color: rgb(249, 250, 251); /* bg-gray-50 */
+    padding-left: 0.25rem;
+    border-radius: 0.375rem;
+}
+
+/* Preset Buttons */
+.preset-btn {
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+}
+
+/* ==================== Custom Scrollbar ==================== */
+
+/* For WebKit browsers (Chrome, Safari, newer Edge) */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: rgb(249, 250, 251); /* bg-gray-50 */
+    border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: rgb(209, 213, 219); /* bg-gray-300 */
+    border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: rgb(156, 163, 175); /* bg-gray-400 */
+}
+
+/* For Firefox */
+.overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209, 213, 219) rgb(249, 250, 251);
+}
+
+/* ==================== Loading Animation Enhancements ==================== */
+
+@keyframes pulse-subtle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.loading-pulse {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ==================== Focus Visible (Accessibility) ==================== */
+
+*:focus-visible {
+    outline: 2px solid rgb(59, 130, 246); /* blue-500 */
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+
+/* Override for checkboxes and radios */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+    outline-offset: 0;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* ==================== Toast Animations ==================== */
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+.toast-enter {
+    animation: slideInUp 0.3s ease-out;
+}
+
+.toast-exit {
+    animation: slideOutDown 0.3s ease-in;
+}
+
+/* ==================== Modal Backdrop Blur ==================== */
+
+.modal-backdrop {
+    backdrop-filter: blur(2px);
+}
+
+/* ==================== Print Styles ==================== */
+
+@media print {
+    #sidebar,
+    #sidebarOverlay,
+    #expandBtn,
+    #confirmModal,
+    #blueprintModal,
+    #toastContainer {
+        display: none !important;
+    }
+    
+    #wpFrame {
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* ==================== Responsive Tweaks ==================== */
+
+@media (max-width: 768px) {
+    /* Improve touch targets on mobile */
+    .plugin-label,
+    .preset-btn,
+    button {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+}
+
+/* ==================== Reduced Motion Support ==================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .loading-pulse {
+        animation: none;
+    }
+}
+
+/* ==================== High Contrast Mode Support ==================== */
+
+@media (prefers-contrast: high) {
+    .tab-btn-active {
+        font-weight: 700;
+    }
+    
+    .plugin-label:hover {
+        border: 1px solid currentColor;
+    }
+}
+
+/* ==================== Dark Mode Ready (Future Enhancement) ==================== */
+
+@media (prefers-color-scheme: dark) {
+    /* Currently not implemented, but prepared for future dark mode support */
+    /* Uncomment and customize when dark mode is added */
+    
+    /*
+    body {
+        background-color: rgb(17, 24, 39);
+        color: rgb(243, 244, 246);
+    }
+    
+    #sidebar {
+        background-color: rgb(31, 41, 55);
+        border-color: rgb(55, 65, 81);
+    }
+    */
+}
+
+/* ==================== Performance Optimizations ==================== */
+
+/* GPU acceleration for animations */
+.transition-transform,
+.transform,
+#sidebar,
+#sidebarOverlay {
+    will-change: transform;
+}
+
+/* Prevent layout shifts during loading */
+#wpFrame {
+    contain: strict;
+}
+
+/* ==================== Utility: Screen Reader Only ==================== */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ==================== Custom Focus Indicators ==================== */
+
+.custom-focus:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+    transition: box-shadow 0.15s ease;
+}
